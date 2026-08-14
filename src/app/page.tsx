@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 import { SOURCE_LABELS, INDUSTRY_LABELS } from '@/config/defaults';
 
-const CHART_COLORS = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#06b6d4', '#f43f5e'];
+const CHART_COLORS = ['#30D158', '#FF9F0A', '#66D4CF', '#f59e0b', '#30B0C7', '#f43f5e'];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload?.length) {
@@ -107,7 +107,7 @@ export default function DashboardPage() {
               value={stats?.totalJobs.toLocaleString() ?? 0}
               subtitle="across all sources"
               icon={Briefcase}
-              color="#6366f1"
+              color="#30D158"
               delay={0}
             />
             <StatsCard
@@ -115,7 +115,7 @@ export default function DashboardPage() {
               value={stats?.newToday ?? 0}
               subtitle="posted in last 24h"
               icon={Zap}
-              color="#10b981"
+              color="#66D4CF"
               trend={stats?.newToday && stats.newToday > 0 ? 12 : 0}
               delay={0.1}
             />
@@ -132,7 +132,7 @@ export default function DashboardPage() {
               value={`${stats?.matchRate ?? 0}%`}
               subtitle="jobs score ≥ 60/100"
               icon={Star}
-              color="#8b5cf6"
+              color="#30B0C7"
               delay={0.3}
             />
           </div>
