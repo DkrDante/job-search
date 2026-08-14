@@ -3,21 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Radar, LayoutDashboard, Briefcase, KanbanSquare,
-  Bell, User, BarChart3, RefreshCw, Zap,
+  Radar, RefreshCw, Zap,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useToast } from './ToastProvider';
-
-const navItems = [
-  { href: '/',              label: 'Dashboard',     icon: LayoutDashboard },
-  { href: '/jobs',          label: 'Job Board',     icon: Briefcase },
-  { href: '/applications',  label: 'Applications',  icon: KanbanSquare },
-  { href: '/alerts',        label: 'Alerts',        icon: Bell },
-  { href: '/profile',       label: 'My Profile',    icon: User },
-  { href: '/analytics',     label: 'Analytics',     icon: BarChart3 },
-];
+import { navItems } from '@/config/nav';
+import { springSettle } from '@/lib/motion';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -71,6 +63,7 @@ export default function Sidebar() {
               {isActive && (
                 <motion.div
                   layoutId="sidebar-active"
+                  transition={springSettle}
                   className="absolute inset-0 bg-indigo-500/10 rounded-[10px] -z-10"
                 />
               )}
