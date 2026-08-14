@@ -25,6 +25,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# runtime data store (generated at runtime, never checked in)
+/data/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
