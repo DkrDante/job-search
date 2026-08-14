@@ -68,6 +68,7 @@ export default function JobCard({ job, onSelect, index = 0 }: JobCardProps) {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
+      whileTap={{ scale: 0.99 }}
       transition={{ duration: 0.3, delay: index * 0.04 }}
       onClick={() => onSelect?.(job)}
       className="glass-card job-card group"
