@@ -583,3 +583,10 @@ input[type='range']::-webkit-slider-thumb {
   .filter-panel { width: 100%; }
   .page-header { padding: 20px 16px 0; }
 }
+
+@media (prefers-reduced-transparency: reduce) {
+  .sidebar, .page-header, .toast, .filter-panel .glass-card-static {
+    backdrop-filter: none !important;
+    background: rgba(11, 13, 18, 0.98) !important;
+  }
+}
