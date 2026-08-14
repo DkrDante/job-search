@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       remote: body.remote || ['remote'],
       experienceLevels: body.experienceLevels || ['mid', 'senior'],
       industries: body.industries || ['tech'],
-      sources: body.sources || ['remotive', 'mock'],
+      sources: body.sources || ['remotive'],
       frequency: body.frequency || '30min',
       isActive: body.isActive ?? true,
       createdAt: new Date().toISOString(),

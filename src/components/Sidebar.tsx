@@ -19,7 +19,7 @@ export default function Sidebar() {
   async function handleRefresh() {
     setRefreshing(true);
     try {
-      const res = await fetch('/api/jobs/refresh', { method: 'POST', body: JSON.stringify({ useMock: true }) });
+      const res = await fetch('/api/jobs/refresh', { method: 'POST' });
       const data = await res.json();
       success(`Found ${data.newJobs ?? 0} new jobs across ${Object.keys(data.sources ?? {}).length} sources`, 'Scan Complete');
     } catch {
