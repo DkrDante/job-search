@@ -46,6 +46,8 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node-cron": "^3.0.11"
+    "@types/node-cron": "^3.0.11",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35"
   }
 }

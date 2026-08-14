@@ -279,7 +279,7 @@ export default function DashboardPage() {
             <div className="glass-card-static p-10 text-center">
               <Clock size={32} className="text-slate-600 mx-auto mb-3" />
               <p className="text-slate-400 text-sm">No jobs found yet</p>
-              <p className="text-slate-600 text-xs mt-1">Click "Refresh Now" to scan for jobs</p>
+              <p className="text-slate-600 text-xs mt-1">Click &ldquo;Refresh Now&rdquo; to scan for jobs</p>
             </div>
           )}
         </motion.div>
