@@ -293,7 +293,7 @@ export default function AlertsPage() {
             <p className="text-sm font-medium text-white">Automated Scanning</p>
             <p className="text-xs text-slate-400 mt-0.5">
               The system automatically scans configured sources at the specified intervals. 
-              You'll receive in-app toast notifications when matching positions are found.
+              You&rsquo;ll receive in-app toast notifications when matching positions are found.
             </p>
           </div>
         </div>

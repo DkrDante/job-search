@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, AlertTriangle, Info, Bell } from 'lucide-react';
+import { springSettle, useAppleMotion } from '@/lib/motion';
 
 interface Toast {
   id: string;
@@ -29,6 +30,7 @@ export function useToast() {
 
 export default function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const { reduceMotion } = useAppleMotion();
 
   const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -65,9 +67,10 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
           {toasts.map(toast => (
             <motion.div
               key={toast.id}
-              initial={{ opacity: 0, x: 60, scale: 0.9 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 60, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.9, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, scale: 0.9, filter: 'blur(8px)' }}
+              transition={reduceMotion ? { duration: 0.15 } : springSettle}
               className={`toast border ${colors[toast.type]}`}
             >
               <div className="flex items-start gap-3">

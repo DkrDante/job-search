@@ -14,7 +14,7 @@ interface StatsCardProps {
 }
 
 export default function StatsCard({
-  title, value, subtitle, icon: Icon, color = '#6366f1', trend, delay = 0,
+  title, value, subtitle, icon: Icon, color = '#30D158', trend, delay = 0,
 }: StatsCardProps) {
   return (
     <motion.div

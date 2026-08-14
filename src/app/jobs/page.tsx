@@ -52,10 +52,10 @@ function JobDetailDrawer({ job, onClose }: { job: Job; onClose: () => void }) {
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-2xl h-full bg-[#0d1225] border-l border-white/8 overflow-y-auto flex flex-col"
+        className="w-full max-w-2xl h-full bg-[var(--bg-secondary)] border-l border-white/8 overflow-y-auto flex flex-col"
       >
         {/* Drawer header */}
-        <div className="sticky top-0 bg-[#0d1225]/95 backdrop-blur border-b border-white/5 p-6 flex items-start justify-between gap-4">
+        <div className="sticky top-0 bg-[var(--bg-secondary)]/95 backdrop-blur border-b border-white/5 p-6 flex items-start justify-between gap-4">
           <div className="flex items-start gap-4 flex-1 min-w-0">
             <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
               {job.companyLogo ? (
@@ -145,7 +145,7 @@ function JobDetailDrawer({ job, onClose }: { job: Job; onClose: () => void }) {
         </div>
 
         {/* CTA */}
-        <div className="sticky bottom-0 bg-[#0d1225]/95 backdrop-blur border-t border-white/5 p-6 flex gap-3">
+        <div className="sticky bottom-0 bg-[var(--bg-secondary)]/95 backdrop-blur border-t border-white/5 p-6 flex gap-3">
           <button onClick={() => handleApply('bookmarked')} className="btn-secondary flex-1 justify-center">
             <Bookmark size={15} /> Bookmark
           </button>

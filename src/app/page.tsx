@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 import { SOURCE_LABELS, INDUSTRY_LABELS } from '@/config/defaults';
 
-const CHART_COLORS = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#06b6d4', '#f43f5e'];
+const CHART_COLORS = ['#30D158', '#FF9F0A', '#66D4CF', '#f59e0b', '#30B0C7', '#f43f5e'];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload?.length) {
@@ -107,7 +107,7 @@ export default function DashboardPage() {
               value={stats?.totalJobs.toLocaleString() ?? 0}
               subtitle="across all sources"
               icon={Briefcase}
-              color="#6366f1"
+              color="#30D158"
               delay={0}
             />
             <StatsCard
@@ -115,7 +115,7 @@ export default function DashboardPage() {
               value={stats?.newToday ?? 0}
               subtitle="posted in last 24h"
               icon={Zap}
-              color="#10b981"
+              color="#66D4CF"
               trend={stats?.newToday && stats.newToday > 0 ? 12 : 0}
               delay={0.1}
             />
@@ -132,7 +132,7 @@ export default function DashboardPage() {
               value={`${stats?.matchRate ?? 0}%`}
               subtitle="jobs score ≥ 60/100"
               icon={Star}
-              color="#8b5cf6"
+              color="#30B0C7"
               delay={0.3}
             />
           </div>
@@ -159,7 +159,7 @@ export default function DashboardPage() {
                   axisLine={false}
                 />
                 <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(99,102,241,0.05)' }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(48,209,88,0.05)' }} />
                 <Bar dataKey="jobs" radius={[4, 4, 0, 0]}>
                   {industryChartData.map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} fillOpacity={0.8} />
@@ -197,7 +197,7 @@ export default function DashboardPage() {
                 </Pie>
                 <Tooltip
                   formatter={(val, name) => [val, name]}
-                  contentStyle={{ background: '#0d1225', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                  contentStyle={{ background: '#0b0d12', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -279,7 +279,7 @@ export default function DashboardPage() {
             <div className="glass-card-static p-10 text-center">
               <Clock size={32} className="text-slate-600 mx-auto mb-3" />
               <p className="text-slate-400 text-sm">No jobs found yet</p>
-              <p className="text-slate-600 text-xs mt-1">Click "Refresh Now" to scan for jobs</p>
+              <p className="text-slate-600 text-xs mt-1">Click &ldquo;Refresh Now&rdquo; to scan for jobs</p>
             </div>
           )}
         </motion.div>
