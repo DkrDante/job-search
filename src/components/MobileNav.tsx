@@ -24,11 +24,10 @@ export default function MobileNav() {
   }, [pathname]);
 
   useEffect(() => {
-    x.set(0);
     if (open && drawerRef.current) {
       drawerWidthRef.current = drawerRef.current.offsetWidth;
     }
-  }, [open, x]);
+  }, [open]);
 
   function handleDragEnd(_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
     const drawerWidth = drawerWidthRef.current;

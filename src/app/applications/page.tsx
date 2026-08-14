@@ -54,6 +54,9 @@ function KanbanCard({ app, onUpdate, onDelete }: {
 
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (reduceMotion) return; // fall back to the <select> only
+    e.preventDefault();
+    x.stop();
+    y.stop();
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     setDragging(true);
     const startX = e.clientX;
@@ -113,6 +116,7 @@ function KanbanCard({ app, onUpdate, onDelete }: {
     function onUp(ev: PointerEvent) {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
       clearDropHighlights();
       setDragging(false);
 
@@ -136,6 +140,7 @@ function KanbanCard({ app, onUpdate, onDelete }: {
 
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
   }
 
   return (
