@@ -13,7 +13,7 @@ import {
 import { DashboardStats } from '@/lib/types';
 import { SOURCE_LABELS, INDUSTRY_LABELS } from '@/config/defaults';
 
-const COLORS = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#06b6d4', '#f43f5e', '#ec4899'];
+const COLORS = ['#30D158', '#FF9F0A', '#66D4CF', '#f59e0b', '#30B0C7', '#f43f5e', '#ec4899'];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload?.length) {
@@ -64,10 +64,10 @@ export default function AnalyticsPage() {
   }));
 
   const STATUS_COLORS: Record<string, string> = {
-    Bookmarked: '#818cf8',
-    Applied: '#22d3ee',
+    Bookmarked: '#8E8E93',
+    Applied: '#FF9F0A',
     Interviewing: '#fbbf24',
-    Offer: '#34d399',
+    Offer: '#66D4CF',
     Rejected: '#fb7185',
     Withdrawn: '#94a3b8',
   };
@@ -85,9 +85,9 @@ export default function AnalyticsPage() {
         {/* Overview row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Total Jobs', value: stats?.totalJobs ?? 0, icon: Briefcase, color: '#6366f1' },
-            { label: 'New Today',  value: stats?.newToday ?? 0,  icon: TrendingUp, color: '#10b981' },
-            { label: 'Applied',    value: stats?.applied ?? 0,    icon: CheckCircle2, color: '#22d3ee' },
+            { label: 'Total Jobs', value: stats?.totalJobs ?? 0, icon: Briefcase, color: '#30D158' },
+            { label: 'New Today',  value: stats?.newToday ?? 0,  icon: TrendingUp, color: '#66D4CF' },
+            { label: 'Applied',    value: stats?.applied ?? 0,    icon: CheckCircle2, color: '#FF9F0A' },
             { label: 'Match Rate', value: `${stats?.matchRate ?? 0}%`, icon: Target, color: '#f59e0b' },
           ].map(({ label, value, icon: Icon, color }, i) => (
             <motion.div key={label}
@@ -146,7 +146,7 @@ export default function AnalyticsPage() {
                 <BarChart data={industryData} layout="vertical" barSize={12}>
                   <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis type="category" dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} width={100} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(99,102,241,0.05)' }} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(48,209,88,0.05)' }} />
                   <Bar dataKey="jobs" radius={[0, 4, 4, 0]}>
                     {industryData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} fillOpacity={0.8} />
@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
                 <BarChart data={funnelData} barSize={28}>
                   <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(99,102,241,0.05)' }} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(48,209,88,0.05)' }} />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]} name="Applications">
                     {funnelData.map((entry, i) => (
                       <Cell key={i} fill={STATUS_COLORS[entry.name] ?? COLORS[i % COLORS.length]} />
