@@ -43,14 +43,14 @@ export const SOURCE_LABELS: Record<string, string> = {
 };
 
 export const SOURCE_COLORS: Record<string, string> = {
-  remotive:   '#10b981',
-  adzuna:     '#6366f1',
+  remotive:   '#66D4CF',
+  adzuna:     '#FF9F0A',
   'hn-hiring':'#f59e0b',
-  remoteok:   '#06b6d4',
-  arbeitnow:  '#8b5cf6',
+  remoteok:   '#30B0C7',
+  arbeitnow:  '#8E8E93',
   themuse:    '#ec4899',
   jobicy:     '#f43f5e',
-  rss:        '#64748b',
+  rss:        '#30B0C7',
   custom:     '#94a3b8',
 };
 

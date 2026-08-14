@@ -3,10 +3,10 @@ import { SOURCE_LABELS, SOURCE_COLORS } from '@/config/defaults';
 
 const SOURCE_EMOJI: Record<string, string> = {
   remotive:    '🟢',
-  adzuna:      '🔵',
+  adzuna:      '🟠',
   'hn-hiring': '🟡',
-  remoteok:    '🔵',
-  arbeitnow:   '🟣',
+  remoteok:    '⚪',
+  arbeitnow:   '⚫',
   themuse:     '🩷',
   jobicy:      '🔴',
   rss:         '⬜',
