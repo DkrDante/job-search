@@ -11,6 +11,7 @@ import ScoreRing from './ScoreRing';
 import SourceBadge from './SourceBadge';
 import { useState } from 'react';
 import { useToast } from './ToastProvider';
+import { getScoreColor } from '@/lib/scoreColor';
 
 interface JobCardProps {
   job: Job;
@@ -34,10 +35,7 @@ export default function JobCard({ job, onSelect, index = 0 }: JobCardProps) {
   const salaryStr = formatSalary(job.salary);
   const postedAgo = formatDistanceToNow(new Date(job.postedAt), { addSuffix: true });
 
-  const scoreColor =
-    job.relevanceScore >= 80 ? '#10b981' :
-    job.relevanceScore >= 60 ? '#6366f1' :
-    job.relevanceScore >= 40 ? '#f59e0b' : '#64748b';
+  const scoreColor = getScoreColor(job.relevanceScore);
 
   async function handleBookmark(e: React.MouseEvent) {
     e.stopPropagation();

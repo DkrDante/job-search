@@ -1,6 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { getScoreColor } from '@/lib/scoreColor';
+import { springSettle, useAppleMotion } from '@/lib/motion';
 
 interface ScoreRingProps {
   score: number;
@@ -13,12 +15,9 @@ export default function ScoreRing({ score, size = 48, color, showLabel = true }:
   const radius = (size - 6) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
+  const { reduceMotion } = useAppleMotion();
 
-  const ringColor =
-    color ??
-    (score >= 80 ? '#10b981' :
-     score >= 60 ? '#6366f1' :
-     score >= 40 ? '#f59e0b' : '#64748b');
+  const ringColor = color ?? getScoreColor(score);
 
   return (
     <div className="score-ring-container flex-shrink-0" style={{ width: size, height: size }}>
@@ -44,8 +43,7 @@ export default function ScoreRing({ score, size = 48, color, showLabel = true }:
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: circumference - progress }}
-          transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
-          style={{ filter: `drop-shadow(0 0 4px ${ringColor}60)` }}
+          transition={reduceMotion ? { duration: 0.15 } : { ...springSettle, delay: 0.1 }}
         />
       </svg>
       {showLabel && (
