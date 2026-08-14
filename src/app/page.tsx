@@ -159,7 +159,7 @@ export default function DashboardPage() {
                   axisLine={false}
                 />
                 <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(99,102,241,0.05)' }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(48,209,88,0.05)' }} />
                 <Bar dataKey="jobs" radius={[4, 4, 0, 0]}>
                   {industryChartData.map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} fillOpacity={0.8} />
