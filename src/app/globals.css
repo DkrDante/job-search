@@ -317,6 +317,31 @@ body {
   transform: translateY(-1px);
 }
 
+.kanban-card-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.kanban-card-dragging {
+  cursor: grabbing;
+  position: relative;
+  z-index: 50;
+  pointer-events: none; /* let elementFromPoint see the column underneath, not the dragged card itself */
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+}
+
+.kanban-column-drop-target {
+  border-color: var(--accent) !important;
+  background: rgba(48,209,88,0.06) !important;
+}
+
 /* ─── Sidebar Nav ────────────────────────────────────────────────────── */
 .nav-item {
   display: flex;

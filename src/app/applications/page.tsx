@@ -1,22 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { KanbanSquare, Plus, Pencil, Trash2, ExternalLink, Clock, ChevronRight } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
+import { KanbanSquare, Plus, Pencil, Trash2, ExternalLink, Clock, ChevronRight, GripVertical } from 'lucide-react';
 import { ApplicationRecord, ApplicationStatus, Job } from '@/lib/types';
 import { useToast } from '@/components/ToastProvider';
 import { formatDistanceToNow } from 'date-fns';
+import { springMomentum, useAppleMotion } from '@/lib/motion';
 
 const COLUMNS: { status: ApplicationStatus; label: string; color: string; emoji: string }[] = [
-  { status: 'bookmarked',   label: 'Bookmarked',   color: '#818cf8', emoji: '🔖' },
-  { status: 'applied',      label: 'Applied',      color: '#22d3ee', emoji: '📨' },
+  { status: 'bookmarked',   label: 'Bookmarked',   color: '#8E8E93', emoji: '🔖' },
+  { status: 'applied',      label: 'Applied',      color: '#FF9F0A', emoji: '📨' },
   { status: 'interviewing', label: 'Interviewing', color: '#fbbf24', emoji: '🎯' },
-  { status: 'offer',        label: 'Offer',        color: '#34d399', emoji: '🎉' },
+  { status: 'offer',        label: 'Offer',        color: '#66D4CF', emoji: '🎉' },
   { status: 'rejected',     label: 'Rejected',     color: '#fb7185', emoji: '❌' },
 ];
 
 interface AppWithJob extends ApplicationRecord {
   job?: Job;
+}
+
+function rubberband(overshoot: number, dimension: number, constant = 0.55) {
+  return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
 }
 
 function KanbanCard({ app, onUpdate, onDelete }: {
@@ -26,6 +31,11 @@ function KanbanCard({ app, onUpdate, onDelete }: {
 }) {
   const [showNoteEdit, setShowNoteEdit] = useState(false);
   const [note, setNote] = useState(app.notes);
+  const [dragging, setDragging] = useState(false);
+  const { reduceMotion } = useAppleMotion();
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   async function saveNote() {
     await fetch(`/api/applications/${app.id}`, {
@@ -36,15 +46,116 @@ function KanbanCard({ app, onUpdate, onDelete }: {
     setShowNoteEdit(false);
   }
 
+  function clearDropHighlights() {
+    document.querySelectorAll('.kanban-column-drop-target').forEach(el => {
+      el.classList.remove('kanban-column-drop-target');
+    });
+  }
+
+  function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (reduceMotion) return; // fall back to the <select> only
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    setDragging(true);
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let lastX = e.clientX;
+    let lastY = e.clientY;
+    let lastT = e.timeStamp;
+    let velocityX = 0;
+    let velocityY = 0;
+
+    function onMove(ev: PointerEvent) {
+      const dt = ev.timeStamp - lastT;
+      if (dt > 0) {
+        velocityX = ((ev.clientX - lastX) / dt) * 1000; // px/s
+        velocityY = ((ev.clientY - lastY) / dt) * 1000;
+      }
+      lastX = ev.clientX;
+      lastY = ev.clientY;
+      lastT = ev.timeStamp;
+
+      const card = cardRef.current;
+      if (!card) return;
+      const board = card.closest('.kanban-board') as HTMLElement | null;
+      let dx = ev.clientX - startX;
+      let dy = ev.clientY - startY;
+
+      if (board) {
+        const boardRect = board.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        // cardRect already includes this drag's prior transform (x.get()/y.get()),
+        // so back that out to get the card's untransformed layout position.
+        const originLeft = cardRect.left - x.get();
+        const originTop = cardRect.top - y.get();
+        const originRight = cardRect.right - x.get();
+        const originBottom = cardRect.bottom - y.get();
+
+        const minDx = boardRect.left - originRight;  // dx past this pushes the card fully left of the board
+        const maxDx = boardRect.right - originLeft;  // dx past this pushes the card fully right of the board
+        const minDy = boardRect.top - originBottom;
+        const maxDy = boardRect.bottom - originTop;
+
+        if (dx < minDx) dx = minDx + rubberband(dx - minDx, boardRect.width);
+        if (dx > maxDx) dx = maxDx + rubberband(dx - maxDx, boardRect.width);
+        if (dy < minDy) dy = minDy + rubberband(dy - minDy, boardRect.height);
+        if (dy > maxDy) dy = maxDy + rubberband(dy - maxDy, boardRect.height);
+      }
+
+      x.set(dx);
+      y.set(dy);
+
+      clearDropHighlights();
+      const target = document.elementFromPoint(ev.clientX, ev.clientY);
+      const column = target?.closest('[data-status]') as HTMLElement | null;
+      column?.classList.add('kanban-column-drop-target');
+    }
+
+    function onUp(ev: PointerEvent) {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      clearDropHighlights();
+      setDragging(false);
+
+      const target = document.elementFromPoint(ev.clientX, ev.clientY);
+      const column = target?.closest('[data-status]') as HTMLElement | null;
+      const newStatus = column?.dataset.status as ApplicationStatus | undefined;
+
+      if (newStatus && newStatus !== app.status) {
+        onUpdate(app.id, newStatus);
+      }
+
+      // `framer-motion`'s exported `Transition` type (used for the `transition` prop on
+      // motion components, and by springMomentum's declared type) is a different, wider
+      // shape than the per-value transition type `animate()` expects internally from
+      // `motion-dom`. The values are still exactly springMomentum's (bounce 0.2, duration
+      // 0.35) plus the release velocity — this cast only bridges the two library-internal
+      // type shapes, it doesn't change behavior.
+      animate(x, 0, { ...springMomentum, velocity: velocityX } as any);
+      animate(y, 0, { ...springMomentum, velocity: velocityY } as any);
+    }
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
   return (
     <motion.div
+      ref={cardRef}
       layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="kanban-card"
+      style={{ x, y }}
+      className={`kanban-card ${dragging ? 'kanban-card-dragging' : ''}`}
     >
       <div className="flex items-start justify-between gap-2">
+        <div
+          className="kanban-card-handle"
+          onPointerDown={handlePointerDown}
+          title="Drag to change status"
+        >
+          <GripVertical size={14} />
+        </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-white truncate">{app.job?.title ?? 'Unknown Role'}</p>
           <p className="text-xs text-slate-400 mt-0.5 truncate">{app.job?.company ?? '—'}</p>
@@ -93,6 +204,7 @@ function KanbanCard({ app, onUpdate, onDelete }: {
           value={app.status}
           onChange={e => onUpdate(app.id, e.target.value as ApplicationStatus)}
           className="text-xs bg-transparent border border-white/10 rounded px-1 py-0.5 text-slate-400 cursor-pointer"
+          aria-label="Change application status"
         >
           {COLUMNS.map(c => (
             <option key={c.status} value={c.status}>{c.label}</option>
@@ -194,7 +306,7 @@ export default function ApplicationsPage() {
                 {COLUMNS.map(col => {
                   const colApps = apps.filter(a => a.status === col.status);
                   return (
-                    <div key={col.status} className="kanban-column">
+                    <div key={col.status} className="kanban-column" data-status={col.status}>
                       <div className="flex items-center gap-2 mb-4">
                         <span>{col.emoji}</span>
                         <span className="text-sm font-semibold" style={{ color: col.color }}>{col.label}</span>
