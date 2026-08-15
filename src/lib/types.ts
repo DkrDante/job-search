@@ -114,16 +114,7 @@ export interface ResumeProfile {
   updatedAt: string;
 }
 
-// ─── Store Shape ───────────────────────────────────────────────────────────────
-
-export interface StoreData {
-  jobs: Job[];
-  applications: ApplicationRecord[];
-  alerts: AlertConfig[];
-  profile: ResumeProfile | null;
-  lastRefreshed: string | null;
-  scanHistory: ScanRecord[];
-}
+// ─── Scan History ──────────────────────────────────────────────────────────────
 
 export interface ScanRecord {
   id: string;
