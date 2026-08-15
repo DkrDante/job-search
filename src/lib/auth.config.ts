@@ -1,6 +1,14 @@
 import type { NextAuthConfig } from 'next-auth';
 
-const PUBLIC_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password', '/api/health'];
+const PUBLIC_PATHS = [
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/api/health',
+  '/api/account/forgot-password',
+  '/api/account/reset-password',
+];
 
 export const authConfig: NextAuthConfig = {
   pages: {
