@@ -40,7 +40,11 @@ export default function AccountPage() {
   async function handleDeleteAccount() {
     setDeleting(true);
     try {
-      await fetch('/api/account', { method: 'DELETE' });
+      const res = await fetch('/api/account', { method: 'DELETE' });
+      if (!res.ok) {
+        toastError('Failed to delete account — please try again');
+        return;
+      }
       await signOut({ callbackUrl: '/login' });
     } finally {
       setDeleting(false);
