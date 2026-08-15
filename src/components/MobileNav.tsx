@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
 import type { PanInfo, Transition } from 'framer-motion';
-import { Menu, X, Radar } from 'lucide-react';
+import { Menu, X, Radar, LogOut } from 'lucide-react';
+import { signOut } from 'next-auth/react';
 import { navItems } from '@/config/nav';
 import { springSettle, springMomentum, useAppleMotion } from '@/lib/motion';
 
 const DRAWER_WIDTH_FALLBACK = 300; // used only before the drawer has mounted once
+const AUTH_ROUTES = ['/login', '/signup', '/forgot-password', '/reset-password'];
 
 export default function MobileNav() {
   const pathname = usePathname();
@@ -18,6 +20,8 @@ export default function MobileNav() {
   const x = useMotionValue(0);
   const drawerRef = useRef<HTMLDivElement>(null);
   const drawerWidthRef = useRef(DRAWER_WIDTH_FALLBACK);
+
+  const isAuthRoute = AUTH_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'));
 
   useEffect(() => {
     setOpen(false);
@@ -28,6 +32,10 @@ export default function MobileNav() {
       drawerWidthRef.current = drawerRef.current.offsetWidth;
     }
   }, [open]);
+
+  if (isAuthRoute) {
+    return null;
+  }
 
   function handleDragEnd(_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
     const drawerWidth = drawerWidthRef.current;
@@ -98,6 +106,13 @@ export default function MobileNav() {
                     </Link>
                   );
                 })}
+                <button
+                  onClick={() => signOut({ callbackUrl: '/login' })}
+                  className="nav-item w-full text-left"
+                >
+                  <LogOut size={18} />
+                  <span>Sign out</span>
+                </button>
               </nav>
             </motion.div>
           </>

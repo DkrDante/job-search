@@ -1,38 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getJobs, getLastRefreshed } from '@/lib/store';
+import { auth } from '@/lib/auth';
+import { getAllJobs, getLastRefreshed, getViewedJobIds, toJob } from '@/lib/db/jobs';
+import { getUserProfile } from '@/lib/db/users';
+import { scoreJobs } from '@/lib/scorer';
 import { Job, JobsQueryParams, PaginatedJobsResponse } from '@/lib/types';
 import { DEFAULT_PAGE_SIZE } from '@/config/defaults';
 
 function filterJobs(jobs: Job[], params: JobsQueryParams): Job[] {
+  // unchanged from the existing implementation
   return jobs.filter(job => {
-    // Text search
     if (params.q) {
       const q = params.q.toLowerCase();
       const searchText = `${job.title} ${job.company} ${job.description} ${job.skills.join(' ')}`.toLowerCase();
       if (!searchText.includes(q)) return false;
     }
-    // Location
     if (params.location) {
       const loc = params.location.toLowerCase();
       if (!job.location.toLowerCase().includes(loc)) return false;
     }
-    // Remote type
     if (params.remote && job.remote !== params.remote) return false;
-    // Experience level
     if (params.level && job.experienceLevel !== params.level) return false;
-    // Industry
     if (params.industry && job.industry !== params.industry) return false;
-    // Source
     if (params.source && job.source !== params.source) return false;
-    // Min salary
     if (params.minSalary && job.salary) {
       if ((job.salary.min ?? 0) < params.minSalary) return false;
     }
-    // Job type
     if (params.jobType && job.jobType !== params.jobType) return false;
-    // New only
     if (params.isNew !== undefined && job.isNew !== params.isNew) return false;
-
     return true;
   });
 }
@@ -56,31 +50,46 @@ function sortJobs(jobs: Job[], sort: string = 'relevance', order: string = 'desc
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const userId = session.user.id;
+
     const { searchParams } = new URL(request.url);
     const params: JobsQueryParams = {
       q: searchParams.get('q') || undefined,
       location: searchParams.get('location') || undefined,
-      remote: searchParams.get('remote') as any || undefined,
-      level: searchParams.get('level') as any || undefined,
-      industry: searchParams.get('industry') as any || undefined,
-      source: searchParams.get('source') as any || undefined,
+      remote: (searchParams.get('remote') as any) || undefined,
+      level: (searchParams.get('level') as any) || undefined,
+      industry: (searchParams.get('industry') as any) || undefined,
+      source: (searchParams.get('source') as any) || undefined,
       minSalary: searchParams.get('minSalary') ? Number(searchParams.get('minSalary')) : undefined,
-      jobType: searchParams.get('jobType') as any || undefined,
-      sort: searchParams.get('sort') as any || 'relevance',
-      order: searchParams.get('order') as any || 'desc',
+      jobType: (searchParams.get('jobType') as any) || undefined,
+      sort: (searchParams.get('sort') as any) || 'relevance',
+      order: (searchParams.get('order') as any) || 'desc',
       page: Number(searchParams.get('page') ?? 1),
       limit: Number(searchParams.get('limit') ?? DEFAULT_PAGE_SIZE),
       isNew: searchParams.get('isNew') === 'true' ? true : undefined,
     };
 
-    let jobs = getJobs();
-
-    // If store is empty, trigger initial load
-    if (jobs.length === 0) {
+    let rows = await getAllJobs();
+    if (rows.length === 0) {
       const { runAggregation } = await import('@/lib/aggregator');
       await runAggregation();
-      jobs = getJobs();
+      rows = await getAllJobs();
     }
+
+    const viewedMap = await getViewedJobIds(userId, rows.map(r => r.id));
+    const profile = await getUserProfile(userId);
+    const unscored = rows.map(row =>
+      toJob(row, {
+        relevanceScore: 0,
+        isNew: !viewedMap.has(row.id),
+        viewedAt: viewedMap.get(row.id),
+      })
+    );
+    const jobs = scoreJobs(unscored, profile);
 
     const filtered = filterJobs(jobs, params);
     const sorted = sortJobs(filtered, params.sort, params.order);
@@ -95,7 +104,7 @@ export async function GET(request: NextRequest) {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
-      lastRefreshed: getLastRefreshed(),
+      lastRefreshed: await getLastRefreshed(),
     };
 
     return NextResponse.json(response);

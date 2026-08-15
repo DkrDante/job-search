@@ -1674,20 +1674,18 @@ git commit -m "feat: migrate alerts domain to Prisma with per-user scoping"
 
 ---
 
-### Task 8: Profile domain → Prisma, remove `store.ts`
+### Task 8: Profile domain → Prisma
 
 **Files:**
 - Modify: `src/lib/db/users.ts` (add `updateUserProfile`)
 - Modify: `src/app/api/profile/route.ts`
 - Modify: `src/app/api/profile/upload/route.ts`
-- Delete: `src/lib/store.ts`
-- Modify: `src/lib/types.ts` (remove the now-unused `StoreData` interface)
 
 **Interfaces:**
 - Consumes: `getUserProfile` (Task 5), `prisma`, `auth`.
 - Produces: `updateUserProfile(userId, profile)` on `src/lib/db/users.ts`.
 
-By this task, every consumer of `src/lib/store.ts` (confirmed via `grep -rln "from '@/lib/store'" src/` at plan-writing time: `jobs/route.ts`, `jobs/[id]/route.ts`, `applications/route.ts`, `applications/[id]/route.ts`, `alerts/route.ts`, `stats/route.ts`, `events/route.ts`, `profile/route.ts`, `profile/upload/route.ts`, `aggregator.ts`) will have been migrated except the two profile routes this task handles — so this task both finishes the migration and deletes the now-dead file.
+Of `src/lib/store.ts`'s consumers (confirmed via `grep -rln "from '@/lib/store'" src/` at plan-writing time: `jobs/route.ts`, `jobs/[id]/route.ts`, `applications/route.ts`, `applications/[id]/route.ts`, `alerts/route.ts`, `stats/route.ts`, `events/route.ts`, `profile/route.ts`, `profile/upload/route.ts`, `aggregator.ts`), this task migrates the two profile routes. **`stats/route.ts` is not migrated until Task 9 — do not delete `src/lib/store.ts` in this task**, it's still a live dependency until then. Task 9 deletes it once it becomes the last consumer.
 
 - [ ] **Step 1: Add `updateUserProfile` to the users data-access module**
 
@@ -1813,18 +1811,10 @@ export async function POST(request: NextRequest) {
 ```
 (Keep the existing `extractSkills`/`extractExperienceYears`/`inferExperienceLevel`/`extractTitles` function bodies exactly as they are in the current file — only the imports and the `POST` handler body change.)
 
-- [ ] **Step 4: Delete the old store and its now-dead type**
-
-```bash
-rm src/lib/store.ts
-```
-
-In `src/lib/types.ts`, delete the `StoreData` interface (the `─── Store Shape ───` section) — it has no remaining consumers once `store.ts` is gone.
-
-- [ ] **Step 5: Verify**
+- [ ] **Step 4: Verify**
 
 Run: `grep -rn "from '@/lib/store'" src/`
-Expected: no output (nothing references the deleted file).
+Expected: exactly one remaining match, in `src/app/api/stats/route.ts` — that's expected at this point in the plan (Task 9 migrates it and deletes `store.ts`). Any other file still referencing `@/lib/store` here would mean this task missed something.
 
 Run: `npx tsc --noEmit -p tsconfig.json && npm run lint`
 Expected: 0 errors.
@@ -1849,17 +1839,16 @@ Expected: a relevance score reflecting the new profile (confirms query-time scor
 
 Stop the dev server (`kill %1`).
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add src/lib/db/users.ts src/app/api/profile src/lib/types.ts
-git rm src/lib/store.ts
-git commit -m "feat: migrate profile domain to Prisma, remove file-based store"
+git add src/lib/db/users.ts src/app/api/profile
+git commit -m "feat: migrate profile domain to Prisma"
 ```
 
 ---
 
-### Task 9: Stats route → per-user + global mix
+### Task 9: Stats route → per-user + global mix, remove `store.ts`
 
 **Files:**
 - Modify: `src/app/api/stats/route.ts`
@@ -1962,7 +1951,20 @@ export async function GET() {
 }
 ```
 
-- [ ] **Step 2: Verify**
+- [ ] **Step 2: Delete the now-fully-unreferenced store and its dead type**
+
+This route was the last consumer of `src/lib/store.ts` (Tasks 5–8 already migrated every other consumer). Confirm that, then remove it:
+
+Run: `grep -rn "from '@/lib/store'" src/`
+Expected: no output — Step 1's rewrite above already removed `stats/route.ts`'s import, so this should now be empty. If anything still appears, stop and find what still imports it before continuing — deleting the file with a live consumer remaining would break the build.
+
+```bash
+rm src/lib/store.ts
+```
+
+In `src/lib/types.ts`, delete the `StoreData` interface (the `─── Store Shape ───` section) — it has no remaining consumers once `store.ts` is gone.
+
+- [ ] **Step 3: Verify**
 
 Run: `npx tsc --noEmit -p tsconfig.json && npm run lint`
 Expected: 0 errors.
@@ -1981,11 +1983,12 @@ Expected: `401` (no cookie jar — confirms the route now requires auth, where i
 
 Stop the dev server (`kill %1`).
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add src/app/api/stats
-git commit -m "feat: scope dashboard stats to the requesting user, keep job pool global"
+git add src/app/api/stats src/lib/types.ts
+git rm src/lib/store.ts
+git commit -m "feat: scope dashboard stats to the requesting user, remove file-based store"
 ```
 
 ---

@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Briefcase, KanbanSquare, Bell, User, BarChart3,
+  LayoutDashboard, Briefcase, KanbanSquare, Bell, User, BarChart3, Settings,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -16,4 +16,5 @@ export const navItems: NavItem[] = [
   { href: '/alerts',        label: 'Alerts',        icon: Bell },
   { href: '/profile',       label: 'My Profile',    icon: User },
   { href: '/analytics',     label: 'Analytics',     icon: BarChart3 },
+  { href: '/account',       label: 'Account',       icon: Settings },
 ];

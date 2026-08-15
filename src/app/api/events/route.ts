@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getJobs } from '@/lib/store';
+import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-// ─── Server-Sent Events for real-time new job notifications ──────────────────
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
@@ -9,32 +8,25 @@ export async function GET(request: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      // Send initial connected event
       controller.enqueue(encoder.encode('event: connected\ndata: {}\n\n'));
 
-      let lastCount = getJobs().length;
-      let lastNewCount = getJobs().filter(j => j.isNew).length;
+      let lastChecked = new Date();
 
-      // Poll every 30 seconds for new jobs
-      const interval = setInterval(() => {
+      const interval = setInterval(async () => {
         try {
-          const jobs = getJobs();
-          const newCount = jobs.filter(j => j.isNew).length;
-
-          if (newCount > lastNewCount) {
-            const diff = newCount - lastNewCount;
-            const payload = JSON.stringify({ newJobs: diff, total: jobs.length });
+          const newCount = await prisma.job.count({ where: { createdAt: { gt: lastChecked } } });
+          const now = new Date();
+          if (newCount > 0) {
+            const total = await prisma.job.count();
+            const payload = JSON.stringify({ newJobs: newCount, total });
             controller.enqueue(encoder.encode(`event: new-jobs\ndata: ${payload}\n\n`));
           }
-
-          lastCount = jobs.length;
-          lastNewCount = newCount;
+          lastChecked = now;
         } catch {
           clearInterval(interval);
         }
       }, 30000);
 
-      // Cleanup on disconnect
       request.signal.addEventListener('abort', () => {
         clearInterval(interval);
         controller.close();
@@ -46,7 +38,7 @@ export async function GET(request: NextRequest) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
     },
   });
 }

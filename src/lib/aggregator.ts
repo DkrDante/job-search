@@ -1,4 +1,4 @@
-import { Job, ScanRecord } from './types';
+import { Job } from './types';
 import { fetchRemotiveJobs } from './sources/remotive';
 import { fetchAdzunaJobs } from './sources/adzuna';
 import { fetchHNHiringJobs } from './sources/hn-hiring';
@@ -8,8 +8,7 @@ import { fetchTheMuseJobs } from './sources/themuse';
 import { fetchJobicyJobs } from './sources/jobicy';
 import { fetchRSSFeed, PRESET_RSS_FEEDS } from './sources/rss-parser';
 import { deduplicateJobs, deduplicateJobsWithin } from './deduplicator';
-import { scoreJobs } from './scorer';
-import { upsertJobs, getJobs, getProfile, addScanRecord } from './store';
+import { getAllJobs, upsertFetchedJobs, addScanRecord, toJob } from './db/jobs';
 
 export interface AggregationResult {
   totalFetched: number;
@@ -19,52 +18,23 @@ export interface AggregationResult {
   duration: number;
 }
 
-// ─── Source Registry ──────────────────────────────────────────────────────────
-
 type SourceFetcher = () => Promise<Job[]>;
 
 const SOURCES: { name: string; fetch: SourceFetcher }[] = [
-  // ── Free, no auth required ────────────────────────────────────────────────
-  {
-    name: 'remotive',
-    fetch: () => fetchRemotiveJobs(60),
-  },
-  {
-    name: 'remoteok',
-    fetch: () => fetchRemoteOKJobs(60),
-  },
-  {
-    name: 'arbeitnow',
-    fetch: () => fetchArbeitnowJobs(1),
-  },
-  {
-    name: 'themuse',
-    fetch: () => fetchTheMuseJobs(1, 50),
-  },
-  {
-    name: 'jobicy',
-    fetch: () => fetchJobicyJobs(50),
-  },
-  {
-    name: 'hn-hiring',
-    fetch: () => fetchHNHiringJobs(40),
-  },
-
-  // ── Requires ADZUNA_APP_ID + ADZUNA_API_KEY (free at developer.adzuna.com) ──
-  {
-    name: 'adzuna',
-    fetch: () => fetchAdzunaJobs('software engineer developer', 'us', 1),
-  },
+  { name: 'remotive', fetch: () => fetchRemotiveJobs(60) },
+  { name: 'remoteok', fetch: () => fetchRemoteOKJobs(60) },
+  { name: 'arbeitnow', fetch: () => fetchArbeitnowJobs(1) },
+  { name: 'themuse', fetch: () => fetchTheMuseJobs(1, 50) },
+  { name: 'jobicy', fetch: () => fetchJobicyJobs(50) },
+  { name: 'hn-hiring', fetch: () => fetchHNHiringJobs(40) },
+  { name: 'adzuna', fetch: () => fetchAdzunaJobs('software engineer developer', 'us', 1) },
 ];
-
-// ─── Main Aggregator ──────────────────────────────────────────────────────────
 
 export async function runAggregation(): Promise<AggregationResult> {
   const startTime = Date.now();
   const sourceResults: Record<string, { fetched: number; error?: string }> = {};
   const allFetched: Job[] = [];
 
-  // Run all sources concurrently with individual error isolation
   await Promise.allSettled(
     SOURCES.map(async ({ name, fetch }) => {
       try {
@@ -79,7 +49,6 @@ export async function runAggregation(): Promise<AggregationResult> {
     })
   );
 
-  // RSS preset feeds
   for (const feedConfig of PRESET_RSS_FEEDS) {
     try {
       const rssJobs = await fetchRSSFeed(feedConfig);
@@ -91,47 +60,29 @@ export async function runAggregation(): Promise<AggregationResult> {
   }
 
   const totalFetched = allFetched.length;
-
-  // Dedup within incoming batch
   const dedupedIncoming = deduplicateJobsWithin(allFetched);
 
-  // Dedup against existing store
-  const existing = getJobs();
+  const existingRows = await getAllJobs();
+  const existing = existingRows.map(row => toJob(row, { relevanceScore: 0, isNew: false }));
   const trulyNew = deduplicateJobs(dedupedIncoming, existing);
 
-  // Score with user profile
-  const profile = getProfile();
-  const scoredAll = scoreJobs(
-    [...trulyNew, ...dedupedIncoming.filter(j => !trulyNew.includes(j))],
-    profile
-  );
-
-  // Upsert to store
-  const { added, updated } = upsertJobs(scoredAll);
+  const { added, updated } = await upsertFetchedJobs([
+    ...trulyNew,
+    ...dedupedIncoming.filter(j => !trulyNew.includes(j)),
+  ]);
 
   const duration = Date.now() - startTime;
 
-  // Log scan record
-  const scanRecord: ScanRecord = {
-    id: `scan-${Date.now()}`,
-    timestamp: new Date().toISOString(),
+  await addScanRecord({
     source: 'custom',
     jobsFound: totalFetched,
     newJobs: added,
     duration,
-  };
-  addScanRecord(scanRecord);
+  });
 
   console.log(
     `[Aggregator] Done in ${duration}ms — fetched: ${totalFetched}, deduplicated to: ${dedupedIncoming.length}, new: ${added}, updated: ${updated}`
   );
 
   return { totalFetched, newJobs: added, updated, sources: sourceResults, duration };
-}
-
-// ─── Get New Jobs Since Timestamp ─────────────────────────────────────────────
-
-export function getNewJobsSince(since: string): Job[] {
-  const jobs = getJobs();
-  return jobs.filter(j => j.isNew && new Date(j.postedAt) > new Date(since));
 }

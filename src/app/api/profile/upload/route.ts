@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveProfile } from '@/lib/store';
+import { auth } from '@/lib/auth';
+import { updateUserProfile } from '@/lib/db/users';
 import { ResumeProfile } from '@/lib/types';
 import { COMMON_SKILLS } from '@/config/defaults';
 
@@ -51,6 +52,8 @@ function extractTitles(text: string): string[] {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const formData = await request.formData();
     const file = formData.get('resume') as File | null;
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
     const experienceLevel = inferExperienceLevel(experienceYears);
     const titles = extractTitles(text);
 
-    const profile: ResumeProfile = {
+    const profile = await updateUserProfile(session.user.id, {
       skills: skills.length > 0 ? skills : ['JavaScript', 'Python', 'React'],
       titles: titles.length > 0 ? titles : ['Software Engineer'],
       experienceYears,
@@ -75,20 +78,11 @@ export async function POST(request: NextRequest) {
       preferredIndustries: ['tech'],
       preferredJobTypes: ['full-time'],
       resumeText: text.slice(0, 5000),
-      updatedAt: new Date().toISOString(),
-    };
-
-    saveProfile(profile);
+    });
 
     return NextResponse.json({
       profile,
-      extracted: {
-        skills,
-        titles,
-        experienceYears,
-        experienceLevel,
-        wordCount: text.split(/\s+/).length,
-      },
+      extracted: { skills, titles, experienceYears, experienceLevel, wordCount: text.split(/\s+/).length },
     });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to parse resume' }, { status: 500 });
