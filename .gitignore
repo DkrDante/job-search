@@ -31,3 +31,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code worktrees (each is its own git checkout — never track as a submodule/embedded repo)
+/.claude/worktrees/
