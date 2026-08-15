@@ -18,7 +18,3 @@ primary_region = "iad"
   memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1
-
-[mounts]
-  source = "job_radar_data"
-  destination = "/app/data"
