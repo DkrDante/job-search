@@ -1,0 +1,143 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  name            String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  skills               String[] @default([])
+  titles               String[] @default([])
+  experienceYears      Int?
+  experienceLevel      String?
+  preferredLocations   String[] @default([])
+  preferredRemote      String[] @default([])
+  preferredIndustries  String[] @default([])
+  preferredJobTypes    String[] @default([])
+  targetSalaryMin      Int?
+  targetSalaryMax      Int?
+  resumeText           String?
+  profileUpdatedAt     DateTime?
+
+  applications    Application[]
+  alerts          Alert[]
+  resetTokens     PasswordResetToken[]
+  jobViews        JobView[]
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Job {
+  id                String    @id @default(cuid())
+  title             String
+  company           String
+  companyLogo       String?
+  description       String
+  responsibilities  String[]
+  requirements      String[]
+  skills            String[]
+  location          String
+  remote            String
+  jobType           String
+  experienceLevel   String
+  industry          String
+  salaryMin         Int?
+  salaryMax         Int?
+  salaryCurrency    String?
+  salaryPeriod      String?
+  applyUrl          String
+  deadline          DateTime?
+  postedAt          DateTime
+  source            String
+  sourceId          String?
+  dedupeKey         String    @unique
+  createdAt         DateTime  @default(now())
+
+  applications      Application[]
+  views             JobView[]
+
+  @@index([postedAt])
+  @@index([source])
+}
+
+model JobView {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  viewedAt  DateTime @default(now())
+
+  @@unique([userId, jobId])
+}
+
+model Application {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId             String
+  job               Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status            String
+  notes             String    @default("")
+  appliedAt         DateTime?
+  interviewDate     DateTime?
+  offerAmount       Int?
+  rejectionReason   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([userId, jobId])
+  @@index([userId])
+}
+
+model Alert {
+  id                 String    @id @default(cuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String
+  keywords           String[]
+  excludeKeywords    String[]
+  locations          String[]
+  remote             String[]
+  experienceLevels   String[]
+  industries         String[]
+  minSalary          Int?
+  maxSalary          Int?
+  sources            String[]
+  frequency          String
+  isActive           Boolean   @default(true)
+  lastTriggered      DateTime?
+  createdAt          DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model ScanRecord {
+  id         String    @id @default(cuid())
+  timestamp  DateTime  @default(now())
+  source     String
+  jobsFound  Int
+  newJobs    Int
+  duration   Int
+  error      String?
+}
