@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProfile, saveProfile } from '@/lib/store';
-import { ResumeProfile } from '@/lib/types';
+import { auth } from '@/lib/auth';
+import { getUserProfile, updateUserProfile } from '@/lib/db/users';
 
 export async function GET() {
-  const profile = getProfile();
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const profile = await getUserProfile(session.user.id);
   return NextResponse.json(profile);
 }
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const body = await request.json();
-    const profile: ResumeProfile = {
+    const profile = await updateUserProfile(session.user.id, {
       skills: body.skills || [],
       titles: body.titles || [],
       experienceYears: body.experienceYears || 0,
@@ -22,17 +26,7 @@ export async function POST(request: NextRequest) {
       targetSalaryMin: body.targetSalaryMin,
       targetSalaryMax: body.targetSalaryMax,
       resumeText: body.resumeText,
-      updatedAt: new Date().toISOString(),
-    };
-    saveProfile(profile);
-
-    // Re-score all jobs with new profile
-    const { getJobs, saveJobs } = await import('@/lib/store');
-    const { scoreJobs } = await import('@/lib/scorer');
-    const jobs = getJobs();
-    const rescored = scoreJobs(jobs, profile);
-    saveJobs(rescored);
-
+    });
     return NextResponse.json(profile);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to save profile' }, { status: 500 });

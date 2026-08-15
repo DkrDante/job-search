@@ -20,3 +20,27 @@ export async function getUserProfile(userId: string): Promise<ResumeProfile | nu
     updatedAt: (user.profileUpdatedAt ?? user.updatedAt).toISOString(),
   };
 }
+
+export async function updateUserProfile(
+  userId: string,
+  profile: Partial<ResumeProfile>
+): Promise<ResumeProfile | null> {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      skills: profile.skills,
+      titles: profile.titles,
+      experienceYears: profile.experienceYears,
+      experienceLevel: profile.experienceLevel,
+      preferredLocations: profile.preferredLocations,
+      preferredRemote: profile.preferredRemote,
+      preferredIndustries: profile.preferredIndustries,
+      preferredJobTypes: profile.preferredJobTypes,
+      targetSalaryMin: profile.targetSalaryMin,
+      targetSalaryMax: profile.targetSalaryMax,
+      resumeText: profile.resumeText,
+      profileUpdatedAt: new Date(),
+    },
+  });
+  return getUserProfile(userId);
+}
