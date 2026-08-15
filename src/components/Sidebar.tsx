@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Radar, RefreshCw, Zap,
+  Radar, RefreshCw, Zap, LogOut,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 import { useToast } from './ToastProvider';
 import { navItems } from '@/config/nav';
@@ -92,6 +93,12 @@ export default function Sidebar() {
           )}
         </button>
         <p className="text-xs text-slate-600 text-center mt-2">Auto-scans every 30 min</p>
+        <button
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className="btn-ghost w-full justify-center text-xs mt-2"
+        >
+          <LogOut size={14} /> Sign out
+        </button>
       </div>
     </nav>
   );
