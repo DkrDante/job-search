@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { sendPasswordResetEmail } from '@/lib/email';
 
-const schema = z.object({ email: z.string().email() });
+const schema = z.object({ email: z.string().email().transform(v => v.toLowerCase().trim()) });
 
 export async function POST(request: NextRequest) {
   try {

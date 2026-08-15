@@ -3,7 +3,7 @@ import { ResumeProfile } from '@/lib/types';
 
 export async function getUserProfile(userId: string): Promise<ResumeProfile | null> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return null;
+  if (!user || !user.profileUpdatedAt) return null;
 
   return {
     skills: user.skills,

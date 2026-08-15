@@ -12,10 +12,16 @@ import { useToast } from './ToastProvider';
 import { navItems } from '@/config/nav';
 import { springSettle } from '@/lib/motion';
 
+const AUTH_ROUTES = ['/login', '/signup', '/forgot-password', '/reset-password'];
+
 export default function Sidebar() {
   const pathname = usePathname();
   const { success, error } = useToast();
   const [refreshing, setRefreshing] = useState(false);
+
+  if (AUTH_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) {
+    return null;
+  }
 
   async function handleRefresh() {
     setRefreshing(true);

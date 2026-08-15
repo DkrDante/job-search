@@ -78,6 +78,12 @@ body {
   overflow-x: hidden;
 }
 
+.auth-page-shell {
+  margin-left: 0;
+  width: 100vw;
+  min-height: 100vh;
+}
+
 /* ─── Glass Cards ────────────────────────────────────────────────────── */
 .glass-card {
   background: var(--bg-card);

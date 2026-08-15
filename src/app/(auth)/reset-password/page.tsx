@@ -37,7 +37,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-6 auth-page-shell">
       <div className="glass-card-static p-8 w-full max-w-sm">
         <div className="flex items-center gap-2 mb-6">
           <Radar size={20} className="text-radar-accent" />
